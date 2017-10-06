@@ -22,8 +22,7 @@ abstract class :xhp:svg-element extends :xhp:html-element {
               $escaped_key = $namespace.':'.$escaped_key;
             }
           }
-          $buf .=
-            ' '.$escaped_key.'="'.htmlspecialchars($val, ENT_COMPAT).'"';
+          $buf .= ' '.$escaped_key.'="'.htmlspecialchars($val, ENT_COMPAT).'"';
         }
       }
     }
@@ -61,7 +60,8 @@ class :svg extends :xhp:svg-element {
 }
 
 class :path extends :xhp:svg-element {
-  attribute Stringish d;
+  attribute
+    Stringish d;
 
   protected string $tagName = 'path';
 }
@@ -75,7 +75,9 @@ class :use extends :xhp:svg-element {
 }
 
 class :defs extends :xhp:svg-element {
-  attribute Stringish d, Stringish transform;
+  attribute
+    Stringish d,
+    Stringish transform;
 
   children (:amcharts:ammap)*;
   protected string $tagName = 'defs';
@@ -93,7 +95,10 @@ class :amcharts:ammap extends :xhp:svg-element {
 }
 
 class :g extends :xhp:svg-element {
-  attribute Stringish d, Stringish transform, Stringish data-captured;
+  attribute
+    Stringish d,
+    Stringish transform,
+    Stringish data-captured;
 
   children (:path | :g)*;
   protected string $tagName = 'g';

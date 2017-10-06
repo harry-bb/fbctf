@@ -2,7 +2,6 @@
 
 var Index = require('./index');
 var Widget = require('./widget');
-var Filter = require('./filter');
 var Utils = require('./utils');
 var Modal = require('./modal');
 var Slider = require('./slider');
@@ -21,10 +20,8 @@ var widgetsList = [
   'Filter',
   'Game Clock'
 ];
-Widget.rememberWidgets(widgetsList);
 
-// This Object will be populated in loadSavedFilterModule
-var filterList = {};
+Widget.rememberWidgets(widgetsList);
 
 // Capture enter key presses on login and registration forms
 $(document).on('keypress', 'input', function(e) {
@@ -67,25 +64,7 @@ function activateTeams() {
       // team name
       $('.team-name', $modal).text(team);
       // team badge
-      if (teamData.logo.custom) {
-        // css styles are applied here since 'svg' has a 'use' child, and
-        // css can't select parents based on children
-        $('svg.icon--badge', $modal)
-            .css('display', 'none')
-            .children('use')
-            .attr('xlink:href', "");
-        $('img.icon--badge', $modal)
-            .css('display', '')
-            .attr('src', teamData.logo.path);
-      } else {
-        $('svg.icon--badge', $modal)
-            .css('display', '')
-            .children('use')
-            .attr('xlink:href', "#icon--badge-" + teamData.logo.name);
-        $('img.icon--badge', $modal)
-            .css('display', 'none')
-            .attr('src', "");
-      }
+      $('.icon--badge use', $modal).attr('xlink:href', "#icon--badge-" + teamData.badge);
       // team members
       $.each(teamData.team_members, function() {
         $teamMembers.append('<li>' + this + '</li>');
@@ -131,9 +110,6 @@ function setupInputListeners() {
   // filter the map based on category
   //
   $(document).on('click', 'input[name=fb--module--filter--category]', function() {
-    var cookieValue = Filter.getFilterName(this.id, filterList);
-    Filter.resetNotMainFilters();
-    Filter.setFilterState(cookieValue, 'on');
     toggleCountryGroup("category", $(this).val());
   });
 
@@ -141,9 +117,6 @@ function setupInputListeners() {
   // filter the map based on status
   //
   $(document).on('click', 'input[name=fb--module--filter--status]', function() {
-    var cookieValue = Filter.getFilterName(this.id, filterList);
-    Filter.resetNotMainFilters();
-    Filter.setFilterState(cookieValue, 'on');
     toggleCountryGroup("status", $(this).val());
   });
 
@@ -151,10 +124,6 @@ function setupInputListeners() {
   // filter the filters
   //
   $(document).on('click', 'input[name=fb--module--filter]', function() {
-    var cookieValue = Filter.getFilterName(this.id, filterList);
-    Filter.resetMainFilters();
-    Filter.setFilterState(cookieValue, 'on');
-
     var filter_type = $(this).val();
     if (filter_type === 'category') {
       $('#status-filter-content').removeClass('active');
@@ -494,8 +463,8 @@ function setupInputListeners() {
         FB_CTF.command_line.init();
 
         // Load initial filters
-        loadSavedFilterModule();
-        
+        loadFilterModule();
+
         // Load initial teams related modules and data
         loadTeamData();
         var loaded = loadTeamsModule();
@@ -515,7 +484,7 @@ function setupInputListeners() {
           loadConfData();
         }, FB_CTF.data.CONF.refreshConf);
 
-        // Countries and other modules
+        // Countries
         setInterval(function() {
           if (FB_CTF.data.CONF.gameboard === '1') {
             // Map
@@ -527,7 +496,7 @@ function setupInputListeners() {
             }
             // Filter
             if (Widget.getWidgetStatus('Filter') === 'open') {
-              loadSavedFilterModule();
+              loadFilterModule();
             }
             // Activity
             if (Widget.getWidgetStatus('Activity') === 'open') {
@@ -560,7 +529,7 @@ function setupInputListeners() {
         // Forcefully refreshing all modules every minute
         setInterval(function() {
           loadAnnouncementsModule();
-          loadSavedFilterModule();
+          loadFilterModule();
           loadActivityModule();
           loadTeamsModule();
           loadLeaderboardModule();
@@ -1372,16 +1341,13 @@ function setupInputListeners() {
     }
 
     /**
-     * load module generic, asynchronous
+     * load module generic
      */
-    function loadModuleGeneric(loadPath, targetSelector, success_callback) {
+    function loadModuleGeneric(loadPath, targetSelector) {
       return $.get(loadPath)
         .done(function(data) {
           var $target = $(targetSelector);
           $target.html(data);
-          if (success_callback) {
-            success_callback();
-          }
         })
         .error(function() {
           console.error("There was a problem retrieving the module.");
@@ -1460,23 +1426,7 @@ function setupInputListeners() {
       var filterModulePath = 'inc/gameboard/modules/filter.php';
       var filterTargetSelector = 'aside[data-module="filter"]';
 
-      return loadModuleGeneric(
-        filterModulePath, 
-        filterTargetSelector, 
-        function() {
-          Filter.rememberFilters(filterList);
-        }
-      );
-    }
-
-    /**
-     * wrapper to load and save/remember the filter module
-     */
-    function loadSavedFilterModule() {
-      // Update variable for all filters to remember them
-      filterList = Filter.detectFilters();
-      // Load filter module
-      return loadFilterModule();
+      return loadModuleGeneric(filterModulePath, filterTargetSelector);
     }
 
     /**
@@ -2243,26 +2193,7 @@ function setupInputListeners() {
           // team name
           $('.team-name', $modal).text(team);
           // team badge
-          // TODO this if/else is duplicated further up in this file. Un-duplicate.
-          if (teamData.logo.custom) {
-            // css styles are applied here since 'svg' has a 'use' child, and
-            // css can't select parents based on children
-            $('svg.icon--badge', $modal)
-                .css('display', 'none')
-                .children('use')
-                .attr('xlink:href', "");
-            $('img.icon--badge', $modal)
-                .css('display', '')
-                .attr('src', teamData.logo.path);
-          } else {
-            $('svg.icon--badge', $modal)
-                .css('display', '')
-                .children('use')
-                .attr('xlink:href', "#icon--badge-" + teamData.logo.name);
-            $('img.icon--badge', $modal)
-                .css('display', 'none')
-                .attr('src', "");
-          }
+          $('.icon--badge use', $modal).attr('xlink:href', "#icon--badge-" + teamData.badge);
           // team members
           $.each(teamData.team_members, function() {
             $teamMembers.append('<li>' + this + '</li>');
@@ -2358,7 +2289,7 @@ function setupInputListeners() {
     $body = $('body');
 
     $('#login_button').click(Index.loginTeam);
-    var names_required = $('input[name=action]').val() === 'register_names';
+    var names_required = $('#register_names').length > 0;
     if (names_required) {
       $('#register_button').click(Index.registerNames);
     } else {
@@ -2452,66 +2383,6 @@ function setupInputListeners() {
       FB_CTF.gameboard.initTutorial();
     });
 
-    // load account modal
-    $('.js-account-modal').on('click', function(event) {
-      event.preventDefault();
-      Modal.loadPopup('p=action&modal=account', 'action-account');
-    });
-
-    // submit account modal
-    $body.on('click', '.js-trigger-account-save', function(event) {
-        event.preventDefault();
-
-        var livesync_username = $('.account-link-form input[name=livesync_username]')[0].value;
-        var livesync_password = $('.account-link-form input[name=livesync_password]')[0].value;
-        var csrf_token = $('.account-link-form input[name=csrf_token]')[0].value;
-        var livesync_data = {
-          action: 'set_livesync_password',
-          livesync_username: livesync_username,
-          livesync_password: livesync_password,
-          csrf_token: csrf_token
-        };
-
-        $.post(
-          'index.php?p=game&ajax=true',
-          livesync_data
-        ).fail(function() {
-          // TODO: Make this a modal
-          console.log('ERROR');
-        }).done(function(data) {
-          var responseData = JSON.parse(data);
-          if (responseData.result === 'OK') {
-            console.log('OK');
-            $('.account-link-form input[name=livesync_username]').css("background-color", "#1f7a1f");
-            $('.account-link-form input[name=livesync_password]').css("background-color", "#1f7a1f");
-            $('.account-link-form span').text('Live Sync password updated.');
-          } else {
-            console.log('Failed');
-            $('.account-link-form input[name=livesync_username]').css("background-color", "#800000");
-            $('.account-link-form input[name=livesync_password]').css("background-color", "#800000");
-            $('.account-link-form span').text('Failed! Please try different credentials.');
-          }
-        });
-      });
-
-    $body.on('keypress', '.account-link-form', function(e) {
-        if (e.keyCode == 13) {
-          e.preventDefault();
-          $('.js-trigger-account-save').click();
-        }
-      });
-
-    // open Google OAuth popup
-    $body.on('click', '.js-trigger-google-oauth', function(event) {
-        event.preventDefault();
-
-            var popup = window.open('/data/google_oauth.php', 'Google OAuth', 'height=800,width=800,toolbar=no,scrollbars=1,status=no,location=no,directories=no');
-            if (window.focus)  {
-                popup.focus();
-            }
-        return false;
-      });
-
     // click events
     $body.on('click', '.click-effect', function() {
       var $self = $(this).addClass('clicked');
@@ -2561,40 +2432,6 @@ function setupInputListeners() {
       event.preventDefault();
       $(this).onlySiblingWithClass('active');
     });
-
-    // custom logo file selector
-    var $customEmblemInput = $('#custom-emblem-input');
-    var $customEmblemPreview = $('#custom-emblem-preview');
-    var $customEmblemCarouselNotice = $('#custom-emblem-carousel-notice');
-    $('#custom-emblem-link').on('click', function() {
-      $customEmblemInput.trigger('click');
-    });
-    // on file input change, set image preview and emblem carousel notice
-    $customEmblemInput.change(function() {
-      var input = this;
-      if (input.files && input.files[0]) {
-        if (input.files[0].size > (1000*1024)) {
-          alert('Please upload an image less than 1000KB!');
-          return;
-        }
-
-        var reader = new FileReader();
-
-        reader.onload = function (e) {
-          $customEmblemPreview.attr('src', e.target.result);
-          $customEmblemCarouselNotice.addClass('active');
-        };
-
-        reader.readAsDataURL(input.files[0]);
-      }
-    });
-    // custom logo remover
-    $('#custom-emblem-clear-link').on('click', function() {
-      $customEmblemInput.val(''); // changing file input value doesn't work on IE10/11
-      $customEmblemPreview.attr('src', '');
-      $customEmblemCarouselNotice.removeClass('active');
-    });
-
   }; // FB_CTF.init()
 })(window.FB_CTF = {});
 

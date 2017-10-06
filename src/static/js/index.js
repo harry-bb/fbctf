@@ -7,23 +7,10 @@ function teamNameFormError() {
   });
 }
 
-function teamLoginFormError() {
-  $('.el--text')[0].classList.add('form-error');
-  $('.fb-form input').on('change', function() {
-    $('.el--text')[0].classList.remove('form-error');
-  });
-}
-
-function teamPasswordFormError(toosimple) {
+function teamPasswordFormError() {
   $('.el--text')[1].classList.add('form-error');
-  if (toosimple) {
-    $('#password_error')[0].classList.remove('completely-hidden');
-  }
   $('.fb-form input[name="password"]').on('change', function() {
     $('.el--text')[1].classList.remove('form-error');
-    if (toosimple) {
-      $('#password_error')[0].classList.add('completely-hidden');
-    }
   });
 }
 
@@ -67,40 +54,13 @@ function verifyTeamPassword() {
   }
 }
 
-function verifyTeamLogo(): {isCustom: boolean, type: string, logo: number, error?: any} {
+function verifyTeamLogo() {
   try {
-    // src is filled in by image preview, see fb-ctf.js
-    var customLogoSrc = $('#custom-emblem-preview').attr('src');
-    if (customLogoSrc) {
-      // parse filetype and get base64 data
-      // customLogoSrc should be something like data:image/png;base64,AAAFBfj42Pj4...
-      var filetypeBeginIdx = customLogoSrc.indexOf('/') + 1;
-      var filetypeEndIdx = customLogoSrc.indexOf(';');
-      var filetype = customLogoSrc.substring(filetypeBeginIdx, filetypeEndIdx);
-
-      var base64 = customLogoSrc.substring(customLogoSrc.indexOf(',') + 1);
-
-      return {
-        isCustom: true,
-        type: filetype,
-        logo: base64
-      };
-    }
-
     var teamLogo = $('.fb-slider .active .icon--badge use').attr('xlink:href').replace('#icon--badge-', '');
-    return {
-      isCustom: false,
-      type: null,
-      logo: teamLogo
-    };
+    return teamLogo;
   } catch (err) {
     teamLogoFormError();
-    return {
-      isCustom: null,
-      type: null,
-      logo: null,
-      error: err
-    };
+    return false;
   }
 }
 
@@ -122,16 +82,10 @@ function sendIndexRequest(request_data) {
       goToPage(responseData.redirect);
     } else {
       // TODO: Make this a modal
-      if (responseData.message === 'Password too simple') {
-        teamPasswordFormError(true);
-      }
-      if (responseData.message === 'Login failed') {
-        teamLoginFormError();
-      }
-      if (responseData.message === 'Registration failed') {
-        teamNameFormError();
-        teamTokenFormError();
-      }
+      console.log('Failed');
+      teamNameFormError();
+      teamPasswordFormError();
+      teamTokenFormError();
     }
   });
 }
@@ -140,20 +94,18 @@ module.exports = {
   registerTeam: function() {
     var name = verifyTeamName('register');
     var password = verifyTeamPassword();
-    var logoInfo: {isCustom: boolean, type: string, logo: string, error?: any} = verifyTeamLogo();
+    var logo = verifyTeamLogo();
     var token = '';
     if ($('.fb-form input[name="token"]').length > 0) {
       token = $('.fb-form input[name="token"]')[0].value;
     }
 
-    if (name && password && !logoInfo.error) {
+    if (name && password && logo) {
       var register_data = {
         action: 'register_team',
         teamname: name,
         password: password,
-        logo: logoInfo.logo,
-        isCustomLogo: logoInfo.isCustom,
-        logoType: logoInfo.type,
+        logo: logo,
         token: token
       };
       sendIndexRequest(register_data);
@@ -163,7 +115,7 @@ module.exports = {
   registerNames: function() {
     var name = verifyTeamName('register');
     var password = verifyTeamPassword();
-    var logoInfo: {isCustom: boolean, type: string, logo: string, error?: any} = verifyTeamLogo();
+    var logo = verifyTeamLogo();
     var token = '';
     if ($('.fb-form input[name="token"]').length > 0) {
       token = $('.fb-form input[name="token"]')[0].value;
@@ -179,14 +131,12 @@ module.exports = {
       emails.push(nameField.value);
     });
 
-    if (name && password && !logoInfo.error) {
+    if (name && password && logo) {
       var register_data = {
         action: 'register_names',
         teamname: name,
         password: password,
-        logo: logoInfo.logo,
-        isCustomLogo: logoInfo.isCustom,
-        logoType: logoInfo.type,
+        logo: logo,
         token: token,
         names: JSON.stringify(names),
         emails: JSON.stringify(emails)
@@ -211,9 +161,9 @@ module.exports = {
     if (team && password) {
       var login_data = {
         action: 'login_team',
+        [teamParam]: team,
         password: password
       };
-      login_data[teamParam] = team;
       sendIndexRequest(login_data);
     }
   },

@@ -2,24 +2,27 @@
 
 class IndexController extends Controller {
   <<__Override>>
-  public function getTitle(): string {
-    $custom_org = \HH\Asio\join(Configuration::gen('custom_org'));
-    return tr($custom_org->getValue()). ' '. tr('CTF');
+  protected function getTitle(): string {
+    return 'BB IG - CTF';
   }
 
   <<__Override>>
   protected function getFilters(): array<string, mixed> {
     return array(
       'GET' => array(
-        'page' => array(
-          'filter' => FILTER_VALIDATE_REGEXP,
-          'options' => array('regexp' => '/^[\w-]+$/'),
+        'page'        => array(
+          'filter'      => FILTER_VALIDATE_REGEXP,
+          'options'     => array(
+            'regexp'      => '/^[\w-]+$/'
+          ),
         ),
-        'action' => array(
-          'filter' => FILTER_VALIDATE_REGEXP,
-          'options' => array('regexp' => '/^[\w-]+$/'),
-        ),
-      ),
+        'action'      => array(
+          'filter'      => FILTER_VALIDATE_REGEXP,
+          'options'     => array(
+            'regexp'      => '/^[\w-]+$/'
+          ),
+        )
+      )
     );
   }
 
@@ -34,34 +37,20 @@ class IndexController extends Controller {
       'error',
       'mobile',
       'game',
-      'admin',
+      'admin'
     );
   }
 
   public function renderMainContent(): :xhp {
-    $custom_org = \HH\Asio\join(Configuration::gen('custom_org'));
-    if ($custom_org->getValue() === 'Facebook') {
-      $welcome_msg = tr('Welcome to the Facebook Capture the Flag Competition. By clicking "Play," you will be entered into the official CTF challenge. Good luck in your conquest.');
-    } else {
-      $welcome_msg = 'Welcome to the ' . $custom_org->getValue() . ' Capture the Flag Competition. By clicking "Play," you will be entered into the official CTF challenge. Good luck in your conquest.';
-    }
     return
       <div class="fb-row-container full-height fb-scroll">
-        <main
-          role="main"
-          class=
-            "fb-main page--landing row-fluid no-shrink center-vertically fb-img-glitch">
+        <main role="main" class="fb-main page--landing row-fluid no-shrink center-vertically fb-img-glitch">
           <div class="fb-container fb-centered-main">
-            <h1 class="fb-glitch" data-text={tr('Conquer the world')}>
-              {tr('Conquer the world')}
-            </h1>
-            <p class="typed-text">
-              {$welcome_msg}
-            </p>
+            <h1 class="fb-glitch" data-text="Let the games being">Let the games begin</h1>
+            <p class="typed-text">Welcome to BugsBounty.com's Capture the Flag Competition. By clicking "Play," you will be entered into the official CTF challenge. May the FORCE be with you.</p>
+
             <div class="fb-actionable">
-              <a href="/index.php?page=countdown" class="fb-cta cta--yellow">
-                {tr('Play')}
-              </a>
+              <a href="/index.php?page=countdown" class="fb-cta cta--yellow">Play</a>
             </div>
           </div>
         </main>
@@ -69,96 +58,50 @@ class IndexController extends Controller {
   }
 
   public async function genRenderCountdownContent(): Awaitable<:xhp> {
+    SessionUtils::sessionStart();
     if (SessionUtils::sessionActive()) {
       $play_nav =
         <form class="fb-form inner-container">
-          <p>
-            {tr(
-              'Get ready for the CTF to start and access the gameboard now!',
-            )}
-          </p>
+          <p>Get ready for the CTF to start and access the gameboard now!</p>
           <div class="form-el--actions">
-            <a href="/index.php?p=game" class="fb-cta cta--yellow">
-              {tr('Gameboard')}
-            </a>
+            <a href="/index.php?p=game" class="fb-cta cta--yellow">Gameboard</a>
           </div>
         </form>;
     } else {
       $registration = await Configuration::gen('registration');
       if ($registration->getValue() === '1') {
-        $registration_button =
-          <a
-            style="margin-left: 1em;"
-            href="/index.php?page=registration"
-            class="fb-cta cta--yellow">
-            {tr('Register Team')}
-          </a>;
+        $registration_button = <a style="margin-left: 1em;" href="/index.php?page=registration" class="fb-cta cta--yellow">Register Team</a>;
       } else {
         $registration_button = <a></a>;
       }
       $play_nav =
         <form class="fb-form inner-container">
-          <p>
-            {tr('Get ready for the CTF to start and register your team now!')}
-          </p>
+          <p>Get ready for the CTF to start and register your team now!</p>
           <div class="form-el--actions">
             {$registration_button}
-            <a
-              style="margin-left: 1em;"
-              href="/index.php?page=login"
-              class="fb-cta cta--yellow">
-              {tr('Login')}
-            </a>
+            <a style="margin-left: 1em;" href="/index.php?page=login" class="fb-cta cta--yellow">Login</a>
           </div>
         </form>;
     }
     $next_game = await Configuration::gen('next_game');
     $next_game = $next_game->getValue();
-    $game = await Configuration::gen('game');
-    $game = $game->getValue();
-    if ($game === '1') {
-      $next_game_text = tr('In Progress');
-      $countdown = array('--', '--', '--', '--');
-    } else if ($next_game === '0' || intval($next_game) < time()) {
-      $next_game_text = tr('Soon');
-      $countdown = array('--', '--', '--', '--');
+    if ($next_game === "0") {
+      $next_game_text = "Soon";
     } else {
-      $next_game_text = date(tr('date and time format'), $next_game);
-      $game_start = new DateTime();
-      $game_start->setTimestamp(intval($next_game));
-      $now = new DateTime('now');
-      $countdown_diff = $now->diff($game_start);
-      $countdown = explode('-', $countdown_diff->format('%d-%h-%i-%s'));
+      $next_game_text = $next_game;
     }
     return
       <div class="fb-row-container full-height fb-scroll">
-        <main
-          role="main"
-          class=
-            "fb-main page--game-status row-fluid no-shrink center-vertically fb-img-glitch">
+        <main role="main" class="fb-main page--game-status row-fluid no-shrink center-vertically fb-img-glitch">
           <div class="fb-container fb-centered-main">
-            <h3 class="title-lead">{tr('Upcoming Game')}</h3>
-            <h1 class="fb-glitch" data-text={$next_game_text}>
-              {$next_game_text}
-            </h1>
-            <ul class="upcoming-game-countdown">
-              <li>
-                <span class="count-number">{$countdown[0]}</span>
-                {tr('_days')}
-              </li>
-              <li>
-                <span class="count-number">{$countdown[1]}</span>
-                {tr('_hours')}
-              </li>
-              <li>
-                <span class="count-number">{$countdown[2]}</span>
-                {tr('_minutes')}
-              </li>
-              <li>
-                <span class="count-number">{$countdown[3]}</span>
-                {tr('_seconds')}
-              </li>
-            </ul>
+            <h3 class="title-lead">Upcoming Game</h3>
+            <h1 class="fb-glitch" data-text={$next_game_text}>{$next_game_text}</h1>
+          <!--  <ul class="upcoming-game-countdown">
+              <li><span class="count-number">--</span>_days</li>
+              <li><span class="count-number">--</span>_hours</li>
+              <li><span class="count-number">--</span>_minutes</li>
+              <li><span class="count-number">--</span>_seconds</li>
+            </ul> -->
             {$play_nav}
           </div>
         </main>
@@ -170,106 +113,82 @@ class IndexController extends Controller {
       <div class="fb-column-container full-height">
         <main role="main" class="fb-main page--rules fb-scroll">
           <header class="fb-section-header fb-container">
-            <h1 class="fb-glitch" data-text={tr('Official CTF Rules')}>
-              {tr('Official CTF Rules')}
-            </h1>
+            <h1 class="fb-glitch" data-text="Official CTF Rules">Official CTF Rules</h1>
             <p class="inner-container typed-text">
-              {tr(
-                'Following actions are prohibited, unless explicitly told otherwise by event Admins.',
-              )}
+              Following actions are prohibited, unless explicitly told otherwise by event Admins.
             </p>
           </header>
           <div class="fb-rules">
             <section>
               <header class="rule-section-header">
-                <h3>{tr('Rule')} 1</h3>
-                <h6>{tr('Cooperation')}</h6>
+                <h3>Rule 1</h3>
+                <h6>Cooperation</h6>
               </header>
               <div class="rule-main">
-                <p>
-                  {tr(
-                    'No cooperation between teams with independent accounts. Sharing of keys or providing revealing hints to other teams is cheating, don’t do it.',
-                  )}
+                <p>No cooperation between teams with independent accounts. Sharing of keys or providing revealing hints to other teams is cheating, don’t do it.
                 </p>
                 <p></p>
               </div>
             </section>
             <section>
               <header class="rule-section-header">
-                <h3>{tr('Rule')} 2</h3>
-                <h6>{tr('Attacking Scoreboard')}</h6>
+                <h3>Rule 2</h3>
+                <h6>Attacking Scoreboard</h6>
               </header>
               <div class="rule-main">
-                <p>
-                  {tr(
-                    'No attacking the competition infrastructure. If bugs or vulns are found, please alert the competition organizers immediately.',
-                  )}
+                <p>No attacking the competition infrastructure. If bugs or vulns are found, please alert the competition organizers immediately.
                 </p>
                 <p></p>
               </div>
             </section>
             <section>
               <header class="rule-section-header">
-                <h3>{tr('Rule')} 3</h3>
-                <h6>{tr('Sabotage')}</h6>
+                <h3>Rule 3</h3>
+                <h6>Sabotage</h6>
               </header>
               <div class="rule-main">
-                <p>
-                  {tr(
-                    'Absolutely no sabotaging of other competing teams, or in any way hindering their independent progress.',
-                  )}
+                <p>Absolutely no sabotaging of other competing teams, or in any way hindering their independent progress.
                 </p>
                 <p></p>
               </div>
             </section>
             <section>
               <header class="rule-section-header">
-                <h3>{tr('Rule')} 4</h3>
-                <h6>{tr('Bruteforcing')}</h6>
+                <h3>Rule 4</h3>
+                <h6>Bruteforcing</h6>
               </header>
               <div class="rule-main">
-                <p>
-                  {tr(
-                    'No brute forcing of challenge flag/ keys against the scoring site.',
-                  )}
+                <p>No brute forcing of challenge flag/ keys against the scoring site.
                 </p>
                 <p></p>
               </div>
             </section>
             <section>
               <header class="rule-section-header">
-                <h3>{tr('Rule')} 5</h3>
-                <h6>{tr('Denial Of Service')}</h6>
+                <h3>Rule 5</h3>
+                <h6>Denial Of Service</h6>
               </header>
               <div class="rule-main">
-                <p>
-                  {tr(
-                    'DoSing the CTF platform or any of the challenges is forbidden.',
-                  )}
+                <p>DoSing the CTF platform or any of the challenges is forbidden.
                 </p>
                 <p></p>
               </div>
             </section>
             <section>
               <header class="rule-section-header">
-                <h3>{tr('Legal')}</h3>
-                <h6>{tr('Disclaimer')}</h6>
+                <h3>Legal</h3>
+                <h6>Disclaimer</h6>
               </header>
               <div class="rule-main">
-                <p>
-                  {tr(
-                    'By participating in the contest, you agree to release Facebook and its employees, and the hosting organization from any and all liability, claims or actions of any kind whatsoever for injuries, damages or losses to persons and property which may be sustained in connection with the contest. You acknowledge and agree that Facebook et al is not responsible for technical, hardware or software failures, or other errors or problems which may occur in connection with the contest.',
-                  )}
+                <p>By participating in the contest, you agree to release BugsBounty.com and its employees, and the hosting organization from any and all liability, claims or actions of any kind whatsoever for injuries, damages or losses to persons and property which may be sustained in connection with the contest. You acknowledge and agree that BugsBounty.com et al is not responsible for technical, hardware or software failures, or other errors or problems which may occur in connection with the contest.
                 </p>
+		<p>This CTF interface is developped by Facebook and we would like to give a big shout out to them for making it so well!
+		</p>
               </div>
             </section>
-            <p>
-              {tr(
-                'If you have any questions about what is or is not allowed, please ask an organizer.',
-              )}
-            </p>
+            <p>If you have any questions about what is or is not allowed, please ask an organizer.</p>
             <p></p>
-            <p>{tr('Have fun!')}</p>
+            <p>Have fun!</p>
             <p></p>
           </div>
         </main>
@@ -285,18 +204,18 @@ class IndexController extends Controller {
     $players = intval($registration_players->getValue());
     $names_ul = <ul></ul>;
 
-    for ($i = 1; $i <= $players; $i++) {
-      $name_ = 'registration_name_'.$i;
-      $email_ = 'registration_email_'.$i;
+    for ($i=1; $i<=$players; $i++) {
+      $name_ = 'registration_name_' . $i;
+      $email_ = 'registration_email_' . $i;
       $names_ul->appendChild(
         <li class="fb-column-container">
           <div class="col col-2-4 form-el el--text">
-            <label for="">{tr('Name')}</label>
-            <input class="registration-name" name={$name_} type="text" />
+            <label for="">Name</label>
+            <input class="registration-name" name={$name_} type="text"/>
           </div>
           <div class="col col-2-4 form-el el--text">
-            <label for="">{tr('Email')}</label>
-            <input class="registration-email" name={$email_} type="email" />
+            <label for="">Email</label>
+            <input class="registration-email" name={$email_} type="email"/>
           </div>
         </li>
       );
@@ -306,110 +225,50 @@ class IndexController extends Controller {
     if ($registration_type->getValue() === '2') {
       $token_field =
         <div class="form-el el--text">
-          <label for="">{tr('Token')}</label>
-          <input autocomplete="off" name="token" type="text" />
+          <label for="">Token</label>
+          <input autocomplete="off" name="token" type="text"/>
         </div>;
     } else {
       $token_field = <div></div>;
     }
 
-    $ldap = await Configuration::gen('ldap');
-    $ldap_domain_suffix = "";
-    if ($ldap->getValue() === '1') {
-      $ldap_domain_suffix = await Configuration::gen('ldap_domain_suffix');
-      $ldap_domain_suffix = $ldap_domain_suffix->getValue();
-    }
-
     $logos_section = await $this->genRenderLogosSelection();
     return
-      <main
-        role="main"
-        class="fb-main page--team-registration full-height fb-scroll">
-        <header class="fb-section-header fb-container">
-          <h1 class="fb-glitch" data-text="Team Registration">
-            {tr('Team Registration')}
-          </h1>
-          <p class="inner-container">
-            {tr(
-              'Register to play Capture The Flag here. Once you have registered, you will be logged in.',
-            )}
-          </p>
-        </header>
-        <div class="fb-registration">
-          <form class="fb-form">
-            <input type="hidden" name="action" value="register_names" />
-            <fieldset class="form-set multiple-registration-list">
-              {$names_ul}
-            </fieldset>
-            <br /><br />
-            <fieldset class="form-set fb-container container--small">
-              <div class="form-el el--text">
-                <label for="">{tr('Team Name')}</label>
-                <input
-                  autocomplete="off"
-                  name="teamname"
-                  type="text"
-                  maxlength={20}
-                  autofocus={true}
-                />
-                {$ldap_domain_suffix}
-              </div>
-              <div class="form-el el--text">
-                <label for="">{tr('Password')}</label>
-                <input autocomplete="off" name="password" type="password" />
-              </div>
-              {$token_field}
-            </fieldset>
-            <div class="fb-choose-emblem">
-              <h6>{tr('Choose an Emblem')}</h6>
-              <h6>
-                <a href="#" id="custom-emblem-link">
-                  {tr('or upload your own')}
-                </a>
-              </h6>
-              <div class="custom-emblem">
-                <input
-                  autocomplete="off"
-                  name="custom-emblem"
-                  id="custom-emblem-input"
-                  type="file"
-                  accept="image/*"
-                />
-                <img
-                  id="custom-emblem-preview"
-                  src=""
-                  height={62}
-                  width={80}>
-                </img>
-              </div>
-              <div class="emblem-carousel">
-                <div id="custom-emblem-carousel-notice">
-                  <div class="center-wrapper">
-                    <h6>
-                      <a href="#" id="custom-emblem-clear-link">
-                        {tr(
-                          'Clear your custom emblem to use a default emblem.',
-                        )}
-                      </a>
-                    </h6>
-                  </div>
-                </div>
-                {$logos_section}
-              </div>
+      <main role="main" class="fb-main page--team-registration full-height fb-scroll">
+      <header class="fb-section-header fb-container">
+        <h1 class="fb-glitch" data-text="Team Registration">Team Registration</h1>
+        <p class="inner-container">
+          Register to play Capture The Flag here. Once you have registered, you will be logged in
+        </p>
+      </header>
+      <div class="fb-registration">
+        <form class="fb-form">
+          <input type="hidden" name="action" value="register_names"/>
+          <fieldset class="form-set multiple-registration-list">
+            {$names_ul}
+          </fieldset>
+          <br/><br/>
+          <fieldset class="form-set fb-container container--small">
+            <div class="form-el el--text">
+              <label for="">Team Name</label>
+              <input autocomplete="off" name="teamname" type="text" maxlength={20}/>
             </div>
-            <div class="form-el--actions fb-container container--small">
-              <p>
-                <button
-                  id="register_button"
-                  class="fb-cta cta--yellow"
-                  type="button">
-                  {tr('Sign Up')}
-                </button>
-              </p>
+            <div class="form-el el--text">
+              <label for="">Password</label>
+              <input autocomplete="off" name="password" type="password"/>
             </div>
-          </form>
-        </div>
-      </main>;
+            {$token_field}
+          </fieldset>
+          <div class="fb-choose-emblem">
+            <h6>Choose an Emblem</h6>
+            <div class="emblem-carousel">{$logos_section}</div>
+          </div>
+          <div class="form-el--actions fb-container container--small">
+            <p><button id="register_button" class="fb-cta cta--yellow" type="button">Sign Up</button></p>
+          </div>
+        </form>
+      </div>
+    </main>;
   }
 
   public async function genRenderRegistrationNoNames(): Awaitable<:xhp> {
@@ -417,106 +276,40 @@ class IndexController extends Controller {
     if ($registration_type->getValue() === '2') {
       $token_field =
         <div class="form-el el--text">
-          <label for="">{tr('Token')}</label>
-          <input autocomplete="off" name="token" type="text" />
+          <label for="">Token</label>
+          <input autocomplete="off" name="token" type="text"/>
         </div>;
     } else {
       $token_field = <div></div>;
     }
 
-    $ldap = await Configuration::gen('ldap');
-    $ldap_domain_suffix = "";
-    if ($ldap->getValue() === '1') {
-      $ldap_domain_suffix = await Configuration::gen('ldap_domain_suffix');
-      $ldap_domain_suffix = $ldap_domain_suffix->getValue();
-    }
-
     $logos_section = await $this->genRenderLogosSelection();
     return
-      <main
-        role="main"
-        class="fb-main page--registration full-height fb-scroll">
+      <main role="main" class="fb-main page--registration full-height fb-scroll">
         <header class="fb-section-header fb-container">
-          <h1 class="fb-glitch" data-text={tr('Team Registration')}>
-            {tr('Team Registration')}
-          </h1>
-          <p class="inner-container">
-            {tr(
-              'Register to play Capture The Flag here. Once you have registered, you will be logged in.',
-            )}
-          </p>
+          <h1 class="fb-glitch" data-text="Team Registration">Team Registration</h1>
+          <p class="inner-container">Register to play Capture The Flag here. Once you have registered, you will be logged in.</p>
         </header>
         <div class="fb-registration">
           <form class="fb-form">
-            <input type="hidden" name="action" value="register_team" />
+            <input type="hidden" name="action" value="register_team"/>
             <fieldset class="form-set fb-container container--small">
               <div class="form-el el--text">
-                <label for="">{tr('Team Name')}</label>
-                <input
-                  autocomplete="off"
-                  name="teamname"
-                  type="text"
-                  maxlength={20}
-                  autofocus={true}
-                />
-                {$ldap_domain_suffix}
+                <label for="">Team Name</label>
+                <input autocomplete="off" name="teamname" type="text" maxlength={20}/>
               </div>
               <div class="form-el el--text">
-                <label for="">{tr('Password')}</label>
-                <input autocomplete="off" name="password" type="password" />
-              </div>
-              <div id="password_error" class="el--text completely-hidden">
-                <label for=""></label>
-                <h6 style="color:red;">{tr('Password is too simple')}</h6>
+                <label for="">Password</label>
+                <input autocomplete="off" name="password" type="password"/>
               </div>
               {$token_field}
             </fieldset>
             <div class="fb-choose-emblem">
-              <h6>{tr('Choose an Emblem')}</h6>
-              <h6>
-                <a href="#" id="custom-emblem-link">
-                  {tr('or upload your own')}
-                </a>
-              </h6>
-              <div class="custom-emblem">
-                <input
-                  autocomplete="off"
-                  name="custom-emblem"
-                  id="custom-emblem-input"
-                  type="file"
-                  accept="image/*"
-                />
-                <img
-                  id="custom-emblem-preview"
-                  src=""
-                  height={62}
-                  width={80}>
-                </img>
-              </div>
-              <div class="emblem-carousel">
-                <div id="custom-emblem-carousel-notice">
-                  <div class="center-wrapper">
-                    <h6>
-                      <a href="#" id="custom-emblem-clear-link">
-                        {tr(
-                          'Clear your custom emblem to use a default emblem.',
-                        )}
-                      </a>
-                    </h6>
-                  </div>
-                </div>
-                {$logos_section}
-              </div>
+              <h6>Choose an Emblem</h6>
+              <div class="emblem-carousel">{$logos_section}</div>
             </div>
             <div class="form-el--actions fb-container container--small">
-              <p>
-                <button
-                  id="register_button"
-                  class="fb-cta cta--yellow"
-                  type="button">
-                  {tr('Sign Up')}
-                </button>
-              </p>
+              <p><button id="register_button" class="fb-cta cta--yellow" type="button">Sign Up</button></p>
             </div>
           </form>
         </div>
@@ -535,25 +328,14 @@ class IndexController extends Controller {
     } else {
       return
         <div class="fb-row-container full-height fb-scroll">
-          <main
-            role="main"
-            class=
-              "fb-main page--game-status row-fluid no-shrink center-vertically fb-img-glitch">
+          <main role="main" class="fb-main page--game-status row-fluid no-shrink center-vertically fb-img-glitch">
             <div class="fb-container fb-centered-main">
-              <h3 class="title-lead">{tr('Team Registration')}</h3>
-              <h1 class="fb-glitch" data-text={tr('Not Available')}>
-                {tr('Not Available')}
-              </h1>
+              <h3 class="title-lead">Team Registration</h3>
+              <h1 class="fb-glitch" data-text="Not Available">Not Available</h1>
               <form class="fb-form inner-container">
-                <p>
-                  {tr('Team Registration will be open soon, stay tuned!')}
-                </p>
+                <p>Team Registration will be open soon, stay tuned!</p>
                 <div class="form-el--actions">
-                  <a
-                    href="/index.php?page=registration"
-                    class="fb-cta cta--yellow">
-                    {tr('Try Again')}
-                  </a>
+                  <a href="/index.php?page=registration" class="fb-cta cta--yellow">Try Again</a>
                 </div>
               </form>
             </div>
@@ -564,304 +346,169 @@ class IndexController extends Controller {
 
   public async function genRenderLoginContent(): Awaitable<:xhp> {
     $login = await Configuration::gen('login');
-    $ldap = await Configuration::gen('ldap');
-    $ldap_domain_suffix = "";
-    if ($ldap->getValue() === '1') {
-      $ldap_domain_suffix = await Configuration::gen('ldap_domain_suffix');
-      $ldap_domain_suffix = $ldap_domain_suffix->getValue();
-    }
     if ($login->getValue() === '1') {
-      $login_team =
-        <input
-          autocomplete="off"
-          name="team_name"
-          type="text"
-          maxlength={20}
-          autofocus={true}
-        />;
+      $login_team = <input autocomplete="off" name="team_name" type="text" maxlength={20}/>;
       $login_select = "off";
       $login_select_config = await Configuration::gen('login_select');
       if ($login_select_config->getValue() === '1') {
         $login_select = "on";
         $login_team = <select name="team_id" />;
-        $login_team->appendChild(<option value="0">{tr('Select')}</option>);
-        $all_active_teams = await MultiTeam::genAllActiveTeams();
+        $login_team->appendChild(<option value="0">Select</option>);
+        $all_active_teams = await Team::genAllActiveTeams();
         foreach ($all_active_teams as $team) {
-          error_log('Getting '.$team->getName());
-          $login_team->appendChild(
-            <option value={strval($team->getId())}>
-              {$team->getName()}
-            </option>,
-          );
+          error_log('Getting ' . $team->getName());
+          $login_team->appendChild(<option value={strval($team->getId())}>{$team->getName()}</option>);
         }
       }
 
       return
         <main role="main" class="fb-main page--login full-height fb-scroll">
           <header class="fb-section-header fb-container">
-            <h1 class="fb-glitch" data-text={tr('Team Login')}>
-              {tr('Team Login')}
-            </h1>
-            <p class="inner-container">
-              {tr(
-                'Please login here. If you have not registered, you may do so by clicking "Sign Up" below. ',
-              )}
-            </p>
+            <h1 class="fb-glitch" data-text="Team Login">Team Login</h1>
+            <p class="inner-container">Please login here. If you have not registered, you may do so by clicking "Sign Up" below. </p>
           </header>
           <div class="fb-login">
             <form class="fb-form">
-              <input type="hidden" name="action" value="login_team" />
-              <input
-                type="hidden"
-                name="login_select"
-                value={$login_select}
-              />
+              <input type="hidden" name="action" value="login_team"/>
+              <input type="hidden" name="login_select" value={$login_select}/>
               <fieldset class="form-set fb-container container--small">
                 <div class="form-el el--text">
-                  <label for="">{tr('Team Name')}</label>
-                  {$login_team} {$ldap_domain_suffix}
+                  <label for="">Team Name</label>
+                  {$login_team}
                 </div>
                 <div class="form-el el--text">
-                  <label for="">{tr('Password')}</label>
-                  <input
-                    autocomplete="off"
-                    name="password"
-                    type="password"
-                  />
+                  <label for="">Password</label>
+                  <input autocomplete="off" name="password" type="password"/>
                 </div>
               </fieldset>
               <div class="form-el--actions">
-                <button
-                  id="login_button"
-                  class="fb-cta cta--yellow"
-                  type="button">
-                  {tr('Login')}
-                </button>
+                <button id="login_button" class="fb-cta cta--yellow" type="button">Login</button>
               </div>
               <div class="form-el--footer">
-                <a href="/index.php?page=registration">{tr('Sign Up')}</a>
+                <a href="/index.php?page=registration">Sign Up</a>
               </div>
             </form>
           </div>
         </main>;
-    } else if (Utils::getGET()->get('admin') === 'true') {
-      return
-        <main role="main" class="fb-main page--login full-height fb-scroll">
-          <header class="fb-section-header fb-container">
-            <h1 class="fb-glitch" data-text={tr('Admin Login')}>
-              {tr('Admin Login')}
-            </h1>
-            <p class="inner-container">
-              {tr(
-                'Team login is disabled. Only admins can login at this time. ',
-              )}
-            </p>
-          </header>
-          <div class="fb-login">
-            <form class="fb-form">
-              <input type="hidden" name="action" value="login_team" />
-              <input type="hidden" name="login_select" value={"off"} />
-              <fieldset class="form-set fb-container container--small">
-                <div class="form-el el--text">
-                  <label for="">{tr('Team Name')}</label>
-                  <input
-                    autocomplete="off"
-                    name="team_name"
-                    type="text"
-                    maxlength={20}
-                  />
-                </div>
-                <div class="form-el el--text">
-                  <label for="">{tr('Password')}</label>
-                  <input
-                    autocomplete="off"
-                    name="password"
-                    type="password"
-                  />
-                </div>
-              </fieldset>
-              <div class="form-el--actions">
-                <button
-                  id="login_button"
-                  class="fb-cta cta--yellow"
-                  type="button">
-                  {tr('Login')}
-                </button>
+      } else {
+        return
+          <div class="fb-row-container full-height fb-scroll">
+            <main role="main" class="fb-main page--game-status row-fluid no-shrink center-vertically fb-img-glitch">
+              <div class="fb-container fb-centered-main">
+                <h3 class="title-lead">Team Login</h3>
+                <h1 class="fb-glitch" data-text="Not Available">Not Available</h1>
+                <form class="fb-form inner-container">
+                  <p>Team Login will be open soon, stay tuned!</p>
+                  <div class="form-el--actions">
+                    <a href="/index.php?page=login" class="fb-cta cta--yellow">Try Again</a>
+                  </div>
+                </form>
               </div>
-            </form>
-          </div>
-        </main>;
-    } else {
-      return
-        <div class="fb-row-container full-height fb-scroll">
-          <main
-            role="main"
-            class=
-              "fb-main page--game-status row-fluid no-shrink center-vertically fb-img-glitch">
-            <div class="fb-container fb-centered-main">
-              <h3 class="title-lead">{tr('Team Login')}</h3>
-              <h1 class="fb-glitch" data-text={tr('Not Available')}>
-                {tr('Not Available')}
-              </h1>
-              <form class="fb-form inner-container">
-                <p>{tr('Team Login will be open soon, stay tuned!')}</p>
-                <div class="form-el--actions">
-                  <a href="/index.php?page=login" class="fb-cta cta--yellow">
-                    {tr('Try Again')}
-                  </a>
-                </div>
-                <div class="form-el--actions">
-                  <a href="/index.php?page=login&admin=true" class="fb-cta">
-                    {tr('Admin Login')}
-                  </a>
-                </div>
-              </form>
-            </div>
-          </main>
-        </div>;
-    }
+            </main>
+          </div>;
+      }
   }
 
   public function renderErrorPage(): :xhp {
     return
       <main role="main" class="fb-main page--login full-height fb-scroll">
         <header class="fb-section-header fb-container">
-          <h1 class="fb-glitch" data-text={tr('ERROR')}>{tr('ERROR')}</h1>
+          <h1 class="fb-glitch" data-text="ERROR">ERROR</h1>
         </header>
         <div class="fb-actionable">
           <h1>¯\_(ツ)_/¯</h1>
-          <a href="/index.php" class="fb-cta cta--yellow">
-            {tr('Start Over')}
-          </a>
+          <a href="/index.php" class="fb-cta cta--yellow">Start Over</a>
         </div>
       </main>;
   }
 
-  public async function genRenderMobilePage(): Awaitable<:xhp> {
-    $branding_xhp = await $this->genRenderBranding();
+  public function renderMobilePage(): :xhp {
     return
       <div class="fb-row-container full-height page--mobile">
-        <main
-          role="main"
-          class="fb-main row-fluid center-vertically fb-img-glitch">
+        <main role="main" class="fb-main row-fluid center-vertically fb-img-glitch">
           <div class="fb-container fb-centered-main">
-            <h1 class="fb-glitch" data-text={tr('Window is too small')}>
-              {tr('Window is too small')}
-            </h1>
-            <p>
-              {tr(
-                'For the best CTF experience, please make window size bigger.',
-              )}
-            </p>
-            <p>{tr('Thank you.')}</p>
+            <h1 class="fb-glitch" data-text="Window is too small">Window is too small</h1>
+            <p>For the best CTF experience, please make window size bigger.</p>
+            <p>Thank you.</p>
           </div>
         </main>
         <div class="row-fixed">
-          {$branding_xhp}
+          <fbbranding />
         </div>
       </div>;
   }
 
-  public async function genRenderMainNav(): Awaitable<:xhp> {
+  public function renderMainNav(): :xhp {
+    SessionUtils::sessionStart();
     if (SessionUtils::sessionActive()) {
       $right_nav =
         <ul class="nav-right">
-          <li>
-            <a href="/index.php?p=logout" data-active="logout">
-              {tr('Logout')}
-            </a>
-          </li>
+          <li><a href="/index.php?p=logout" data-active="logout">Logout</a></li>
           <li></li>
-          <li>
-            <a href="/index.php?p=game" data-active="gameboard">
-              {tr('Gameboard')}
-            </a>
-          </li>
+          <li><a href="/index.php?p=game" data-active="gameboard">Gameboard</a></li>
         </ul>;
     } else {
       $right_nav =
         <ul class="nav-right">
-          <li>
-            <a
-              href="/index.php?page=registration"
-              data-active="registration">
-              {tr('Registration')}
-            </a>
-          </li>
+          <li><a href="/index.php?page=registration" data-active="registration">Registration</a></li>
           <li></li>
-          <li>
-            <a href="/index.php?page=login" data-active="login">
-              {tr('Login')}
-            </a>
-          </li>
+          <li><a href="/index.php?page=login" data-active="login">Login</a></li>
         </ul>;
     }
     $left_nav =
       <ul class="nav-left">
-        <li>
-          <a href="/index.php?page=countdown" data-active="countdown">
-            {tr('Play CTF')}
-          </a>
-        </li>
+        <li><a href="/index.php?page=countdown" data-active="countdown">Play CTF</a></li>
         <li></li>
-        <li>
-          <a href="/index.php?page=rules" data-active="rules">
-            {tr('Rules')}
-          </a>
-        </li>
+        <li><a href="/index.php?page=rules" data-active="rules">Rules</a></li>
       </ul>;
-    $branding_gen = await $this->genRenderBranding();
-    $branding = 
-      <div class="branding">
-        <a href="/">
-          <div class="branding-rules">
-            {$branding_gen}
-          </div>
-        </a>
-      </div>;
 
     return
       <nav class="fb-main-nav fb-navigation">
         {$left_nav}
-        {$branding}
+        <div class="branding">
+          <a href="/">
+            <div class="branding-rules">
+              <fbbranding />
+            </div>
+          </a>
+        </div>
         {$right_nav}
       </nav>;
   }
 
   public async function genRenderPage(string $page): Awaitable<:xhp> {
     switch ($page) {
-      case 'main':
-        return $this->renderMainContent();
-      case 'error':
-        return $this->renderErrorPage();
-      case 'mobile':
-        return await $this->genRenderMobilePage();
-      case 'login':
-        return await $this->genRenderLoginContent();
-      case 'registration':
-        return await $this->genRenderRegistrationContent();
-      case 'rules':
-        return $this->renderRulesContent();
-      case 'countdown':
-        return await $this->genRenderCountdownContent();
-      case 'game':
-        throw new GameRedirectException();
-      case 'admin':
-        throw new AdminRedirectException();
-      default:
-        return $this->renderMainContent();
+    case 'main':
+      return $this->renderMainContent();
+    case 'error':
+      return $this->renderErrorPage();
+    case 'mobile':
+      return $this->renderMobilePage();
+    case 'login':
+      return await $this->genRenderLoginContent();
+    case 'registration':
+      return await $this->genRenderRegistrationContent();
+    case 'rules':
+      return $this->renderRulesContent();
+    case 'countdown':
+      return await $this->genRenderCountdownContent();
+    case 'game':
+      throw new GameRedirectException();
+    case 'admin':
+      throw new AdminRedirectException();
+    default:
+      return $this->renderMainContent();
     }
   }
 
   <<__Override>>
   public async function genRenderBody(string $page): Awaitable<:xhp> {
     $rendered_page = await $this->genRenderPage($page);
-    $rendered_nav = await $this->genRenderMainNav();
     return
       <body data-section="pages">
         <div class="fb-sprite" id="fb-svg-sprite"></div>
         <div class="fb-viewport">
-          <div id="fb-main-nav">{$rendered_nav}</div>
+          <div id="fb-main-nav">{$this->renderMainNav()}</div>
           <div id="fb-main-content" class="fb-page">{$rendered_page}</div>
         </div>
         <script type="text/javascript" src="static/dist/js/app.js"></script>

@@ -1,6 +1,6 @@
 <?hh // strict
 
-require_once ('../vendor/autoload.php');
+require_once('../vendor/autoload.php');
 
 async function genInit(): Awaitable<void> {
   try {
@@ -12,6 +12,8 @@ async function genInit(): Awaitable<void> {
     Utils::redirect($e->getPath());
   }
 }
+
+
 
 /* HH_IGNORE_ERROR[1002] */
 \HH\Asio\join(genInit());

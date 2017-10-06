@@ -21,55 +21,11 @@ function endGame() {
   sendAdminRequest(end_data, true);
 }
 
-// Pauses the currently running game
-function pauseGame() {
-  var pause_data = {
-    action: 'pause_game'
-  };
-  sendAdminRequest(pause_data, true);
-}
-
-// Unpauses the currently running game
-function unpauseGame() {
-  var unpause_data = {
-    action: 'unpause_game'
-  };
-  sendAdminRequest(unpause_data, true);
-}
-
-//Confirm team deletion
-function deleteTeamPopup(team_id) {
-  var delete_team = {
-    action: 'delete_team',
-    team_id: team_id
-  };
-  sendAdminRequest(delete_team, true);
-}
-
-//Confirm level deletion
-function deleteLevelPopup(level_id) {
-  var delete_level = {
-    action: 'delete_level',
-    level_id: level_id
-  };
-  sendAdminRequest(delete_level, true);
-}
-
-// Reset the database
-function resetDatabase() {
-  var reset_database = {
-    action: 'reset_database'
-  };
-  sendAdminRequest(reset_database, true);
-}
-
 /**
  * submits an ajax request to the admin endpoint
  *
  * @param  request_data (request object)
  *   - the parameters for the request.
- * @param  refresh_page (boolean)
- *   - check if page should be refreshed.
  *
  * @return Boolean
  *   - whether or not the request was succesful
@@ -417,14 +373,6 @@ function createAnnouncement(section) {
   }
 }
 
-//Create and download attachments backup
-function attachmentsExport() {
-  var csrf_token = $('input[name=csrf_token]')[0].value;
-  var action = 'export_attachments';
-  var url = 'index.php?p=admin&ajax=true&action=' + action + '&csrf_token=' + csrf_token;
-  window.location.href = url;
-}
-
 // Create and download database backup
 function databaseBackup() {
   var csrf_token = $('input[name=csrf_token]')[0].value;
@@ -433,145 +381,12 @@ function databaseBackup() {
   window.location.href = url;
 }
 
-// Export and download current game
+// Export to JSON and download current game
 function exportCurrentGame() {
   var csrf_token = $('input[name=csrf_token]')[0].value;
   var action = 'export_game';
   var url = 'index.php?p=admin&ajax=true&action=' + action + '&csrf_token=' + csrf_token;
   window.location.href = url;
-}
-
-// Generic function to submit the import file.
-function submitImport(type_file, action_file) {
-  var import_file = $('input[name=' + type_file + ']')[0].files[0];
-  var csrf_token = $('input[name=csrf_token]')[0].value;
-  var formData = new FormData();
-  formData.append(type_file, import_file);
-  formData.append('action', action_file);
-  formData.append('csrf_token', csrf_token);
-
-  $.ajax({
-    url: 'index.php?p=admin&ajax=true',
-   type: 'POST',
-   data: formData,
-   enctype: 'multipart/form-data',
-   processData: false,
-   contentType: false
-  }).done(function(data) {
-    var responseData = JSON.parse(data);
-    if (responseData.result == 'OK') {
-      console.log('OK');
-       Modal.loadPopup('p=action&modal=import-done', 'action-import', function() {
-         var ok_button = $("a[class='fb-cta cta--yellow js-close-modal']");
-         ok_button.attr('href', '?p=admin&page=controls');
-         ok_button.removeClass('js-close-modal');
-       });
-    } else {
-      console.log('Failed');
-      Modal.loadPopup('p=action&modal=error', 'action-error', function() {
-        $('.error-text').html('<p>Sorry there was a problem importing the items. Please try again.</p>');
-        var ok_button = $("a[class='fb-cta cta--yellow js-close-modal']");
-        ok_button.attr('href', '?p=admin&page=controls');
-        ok_button.removeClass('js-close-modal');
-      });
-    }
-  });
-}
-
-//Restore and replace database
-function databaseRestore() {
-  $('#restore-database_file').trigger('click');
-  $('#restore-database_file').change(function() {
-    submitImport('database_file', 'restore_db');
-  });
-}
-
-// Import and replace whole game
-function importGame() {
-  $('#import-game_file').trigger('click');
-  $('#import-game_file').change(function() {
-    submitImport('game_file', 'import_game');
-  });
-}
-
-// Import and replace current teams
-function importTeams() {
-  $('#import-teams_file').trigger('click');
-  $('#import-teams_file').change(function() {
-    submitImport('teams_file', 'import_teams');
-  });
-}
-
-// Import and replace current categories
-function importCategories() {
-  $('#import-categories_file').trigger('click');
-  $('#import-categories_file').change(function() {
-    submitImport('categories_file', 'import_categories');
-  });
-}
-
-// Import and replace current logos
-function importLogos() {
-  $('#import-logos_file').trigger('click');
-  $('#import-logos_file').change(function() {
-    submitImport('logos_file', 'import_logos');
-  });
-}
-
-// Import and replace current levels
-function importLevels() {
-  $('#import-levels_file').trigger('click');
-  $('#import-levels_file').change(function() {
-    submitImport('levels_file', 'import_levels');
-  });
-}
-
-//Import and replace current attachments
-function importAttachments() {
-  $('#import-attachments_file').trigger('click');
-  $('#import-attachments_file').change(function() {
-    submitImport('attachments_file', 'import_attachments');
-  });
-}
-
-// Export and download current teams
-function exportCurrentTeams() {
-  var csrf_token = $('input[name=csrf_token]')[0].value;
-  var action = 'export_teams';
-  var url = 'index.php?p=admin&ajax=true&action=' + action + '&csrf_token=' + csrf_token;
-  window.location.href = url;
-}
-
-// Export and download current logos
-function exportCurrentLogos() {
-  var csrf_token = $('input[name=csrf_token]')[0].value;
-  var action = 'export_logos';
-  var url = 'index.php?p=admin&ajax=true&action=' + action + '&csrf_token=' + csrf_token;
-  window.location.href = url;
-}
-
-// Export and download current levels
-function exportCurrentLevels() {
-  var csrf_token = $('input[name=csrf_token]')[0].value;
-  var action = 'export_levels';
-  var url = 'index.php?p=admin&ajax=true&action=' + action + '&csrf_token=' + csrf_token;
-  window.location.href = url;
-}
-
-// Export and download current categories
-function exportCurrentCategories() {
-  var csrf_token = $('input[name=csrf_token]')[0].value;
-  var action = 'export_categories';
-  var url = 'index.php?p=admin&ajax=true&action=' + action + '&csrf_token=' + csrf_token;
-  window.location.href = url;
-}
-
-// Flush Memcached
-function flushMemcached() {
-  var flush_memcached = {
-    action: 'flush_memcached'
-  };
-  sendAdminRequest(flush_memcached, true);
 }
 
 // Create tokens
@@ -897,9 +712,9 @@ function toggleTeam(radio_id) {
   var action_value = (radio_id.split('--')[3] === 'on') ? 1 : 0;
   var toggle_data = {
     action: 'toggle_' + radio_action + '_team',
-    team_id: team_id
+    team_id: team_id,
+    [radio_action]: action_value
   };
-  toggle_data[radio_action] = action_value;
   if (team_id && radio_action) {
     sendAdminRequest(toggle_data, false);
   }
@@ -933,9 +748,9 @@ function toggleLevel(radio_id) {
   var action_value = (radio_id.split('--')[3] === 'on') ? 1 : 0;
   var toggle_data = {
     action: 'toggle_' + radio_action + '_level',
-    level_id: level_id
+    level_id: level_id,
+    [radio_action]: action_value
   };
-  toggle_data[radio_action] = action_value;
   if (level_id && radio_action) {
     sendAdminRequest(toggle_data, false);
   }
@@ -949,10 +764,7 @@ function toggleConfiguration(radio_id) {
     field: radio_action,
     value: action_value
   };
-  var refresh_fields = ['login_strongpasswords', 'custom_logo'];
-  if (refresh_fields.indexOf(radio_action) !== -1) {
-    sendAdminRequest(toggle_data, true);
-  } else {
+  if (radio_action) {
     sendAdminRequest(toggle_data, false);
   }
 }
@@ -963,12 +775,7 @@ function changeConfiguration(field, value) {
     field: field,
     value: value
   };
-  var refresh_fields = ['registration_type', 'language'];
-  if (refresh_fields.indexOf(field) !== -1) {
-    sendAdminRequest(conf_data, true);
-  } else {
-    sendAdminRequest(conf_data, false);
-  }
+  sendAdminRequest(conf_data, false);
 }
 
 function toggleLogo(section) {
@@ -1067,42 +874,14 @@ module.exports = {
         }
       } else if (action === 'create-announcement') {
         createAnnouncement($section);
-      } else if (action === 'export-attachments') {
-        attachmentsExport();
       } else if (action === 'backup-db') {
         databaseBackup();
-      } else if (action === 'import-game') {
-        importGame();
       } else if (action === 'create-tokens') {
         createTokens($section);
       } else if (action === 'export-tokens') {
         exportTokens($section);
       } else if (action === 'export-game') {
         exportCurrentGame();
-      } else if (action === 'import-teams') {
-        importTeams();
-      } else if (action === 'export-teams') {
-        exportCurrentTeams();
-      } else if (action === 'import-logos') {
-        importLogos();
-      } else if (action === 'export-logos') {
-        exportCurrentLogos();
-      } else if (action === 'import-levels') {
-        importLevels();
-      } else if (action === 'import-attachments') {
-        importAttachments();
-      } else if (action === 'export-levels') {
-        exportCurrentLevels();
-      } else if (action === 'import-categories') {
-        importCategories();
-      } else if (action === 'export-categories') {
-        exportCurrentCategories();
-      } else if (action === 'flush-memcached') {
-        flushMemcached();
-      } else if (action === 'create-tokens') {
-        createTokens();
-      } else if (action === 'export-tokens') {
-        exportTokens();
       } else if (action === 'edit') {
         $section.removeClass(lockClass);
         $('input[type="text"], input[type="password"], textarea', $section).prop('disabled', false);
@@ -1191,40 +970,20 @@ module.exports = {
     });
 
     // configuration fields
-    $('select,input[type="number"][name^="fb--conf"],input[type="text"][name^="fb--conf"]').on('change', function() {
+    $('select,input[type="number"][name^="fb--conf"]').on('change', function() {
       var $this = $(this);
       var field = $this.attr('name').split('--')[2];
       var value = '';
-      if ($this.attr('type') === 'number' || $this.attr('type') === 'text') {
+      if ($this.attr('type') === 'number') {
         value = $(this)[0].value;
       } else {
         value = $('option:selected', $this)[0].value;
       }
       if (!$(this).hasClass('not_configuration')) {
         changeConfiguration(field, value);
-      }
-    });
-
-    // game schedule fields
-    $('input[type="number"][name^="fb--schedule"]').on('change', function() {
-      var start_year = $('input[type="number"][name="fb--schedule--start_year"]')[0].value;
-      var start_month = $('input[type="number"][name="fb--schedule--start_month"]')[0].value;
-      var start_day = $('input[type="number"][name="fb--schedule--start_day"]')[0].value;
-      var start_hour = $('input[type="number"][name="fb--schedule--start_hour"]')[0].value;
-      var start_min = $('input[type="number"][name="fb--schedule--start_min"]')[0].value;
-      var start_ts = new Date(start_month + "/" + start_day + "/" + start_year + " " + start_hour + ":" + start_min).getTime() / 1000;
-      if ($.isNumeric(start_ts)) {
-        changeConfiguration("start_ts", start_ts);
-        changeConfiguration("next_game", start_ts);
-      }
-      var end_year = $('input[type="number"][name="fb--schedule--end_year"]')[0].value;
-      var end_month = $('input[type="number"][name="fb--schedule--end_month"]')[0].value;
-      var end_day = $('input[type="number"][name="fb--schedule--end_day"]')[0].value;
-      var end_hour = $('input[type="number"][name="fb--schedule--end_hour"]')[0].value;
-      var end_min = $('input[type="number"][name="fb--schedule--end_min"]')[0].value;
-      var end_ts = new Date(end_month + "/" + end_day + "/" + end_year + " " + end_hour + ":" + end_min).getTime() / 1000;
-      if ($.isNumeric(end_ts)) {
-        changeConfiguration("end_ts", end_ts);
+        if (field === 'registration_type') {
+          location.reload();
+        }
       }
     });
 
@@ -1384,44 +1143,6 @@ module.exports = {
       });
     });
 
-    // prompt pause game
-    $('.js-pause-game').on('click', function(event) {
-      event.preventDefault();
-      Modal.loadPopup('p=action&modal=pause-game', 'action-pause-game', function() {
-        $('#pause_game').click(pauseGame);
-      });
-    });
-
-    // prompt pause game
-    $('.js-unpause-game').on('click', function(event) {
-      event.preventDefault();
-      Modal.loadPopup('p=action&modal=unpause-game', 'action-unpause-game', function() {
-        $('#unpause_game').click(unpauseGame);
-      });
-    });
-
-    // prompt delete team
-    $('.js-delete-team').on('click', function(event) {
-      event.preventDefault();
-      var team_id = $(this).prev('input').attr('value');
-      Modal.loadPopup('p=action&modal=delete-team', 'action-delete-team', function() {
-        $('#delete_team').click(function() {
-          deleteTeamPopup(team_id);
-        });
-      });
-    });
-
-    // prompt delete level
-    $('.js-delete-level').on('click', function(event) {
-      event.preventDefault();
-      var level_id = $(this).prev('input').attr('value');
-      Modal.loadPopup('p=action&modal=delete-level', 'action-delete-level', function() {
-        $('#delete_level').click(function() {
-          deleteLevelPopup(level_id);
-        });
-      });
-    });
-    
     // prompt logout
     $('.js-prompt-logout').on('click', function(event) {
       event.preventDefault();
@@ -1440,57 +1161,5 @@ module.exports = {
       }
     });
 
-    // prompt reset database
-    $('.js-reset-database').on('click', function(event) {
-      event.preventDefault();
-      Modal.loadPopup('p=action&modal=reset-database', 'action-reset-database', function() {
-        $('#reset_database').click(resetDatabase);
-      });
-    });
-
-    // prompt restore database
-    $('.js-restore-database').on('click', function(event) {
-      event.preventDefault();
-      Modal.loadPopup('p=action&modal=restore-database', 'action-restore-database', function() {
-        $('#restore_database').click(databaseRestore);
-      });
-    });
-
-    // custom logo file selector
-    var $customLogoInput = $('#custom-logo-input');
-    var $customLogoImage = $('#custom-logo-image');
-    $('#custom-logo-link').on('click', function() {
-      $customLogoInput.trigger('click');
-    });
-    // on file input change, set image
-    $customLogoInput.change(function() {
-      var input = this;
-      if (input.files && input.files[0]) {
-        if (input.files[0].size > (1000*1024)) {
-          alert('Please upload an image less than 1000KB!');
-          return;
-        }
-
-        var reader = new FileReader();
-
-        reader.onload = function (e) {
-          $customLogoImage.attr('src', e.target.result);
-          var rawImageData = e.target.result;
-          var filetypeBeginIdx = rawImageData.indexOf('/') + 1;
-          var filetypeEndIdx = rawImageData.indexOf(';');
-          var filetype = rawImageData.substring(filetypeBeginIdx, filetypeEndIdx);
-          var base64 = rawImageData.substring(rawImageData.indexOf(',') + 1);
-          var logo_data = {
-            action: 'change_custom_logo',
-            logoType: filetype,
-            logo_b64: base64
-          };
-          sendAdminRequest(logo_data, true);
-        };
-
-        reader.readAsDataURL(input.files[0]);
-
-      }
-    });
   }
 };

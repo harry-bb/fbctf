@@ -6,6 +6,6 @@ abstract class DataController {
 
   public function jsonSend(mixed $data): void {
     header('Content-Type: application/json');
-    print json_encode($data);
+    print json_encode($data, JSON_PRETTY_PRINT);
   }
 }

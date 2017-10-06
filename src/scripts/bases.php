@@ -1,22 +1,6 @@
 <?hh
 
-if (php_sapi_name() !== 'cli') {
-  http_response_code(405); // method not allowed
-  exit(0);
-}
-
-require_once (__DIR__.'/../Db.php');
-require_once (__DIR__.'/../Utils.php');
-require_once (__DIR__.'/../models/Model.php');
-require_once (__DIR__.'/../models/Importable.php');
-require_once (__DIR__.'/../models/Exportable.php');
-require_once (__DIR__.'/../models/Level.php');
-require_once (__DIR__.'/../models/Link.php');
-require_once (__DIR__.'/../models/Team.php');
-require_once (__DIR__.'/../models/Configuration.php');
-require_once (__DIR__.'/../models/ScoreLog.php');
-require_once (__DIR__.'/../models/Control.php');
-require_once (__DIR__.'/../models/MultiTeam.php');
+require_once('/var/www/fbctf/vendor/autoload.php');
 
 $conf_game = \HH\Asio\join(Configuration::gen('game'));
 while ($conf_game->getValue() === '1') {
@@ -25,7 +9,7 @@ while ($conf_game->getValue() === '1') {
   foreach (\HH\Asio\join(Level::genAllActiveBases()) as $base) {
     $endpoint = array(
       'id' => $base->getId(),
-      'url' => \HH\Asio\join(Level::genBaseIP($base->getId())),
+      'url' => \HH\Asio\join(Level::genBaseIP($base->getId()))
     );
     array_push($bases_endpoints, $endpoint);
   }
@@ -47,13 +31,7 @@ while ($conf_game->getValue() === '1') {
       $code = -1;
       //echo "Base(".strval($response['id']).") is DOWN\n";
     }
-    \HH\Asio\join(
-      Level::genLogBaseEntry(
-        $response['id'],
-        $code,
-        strval($response['response']),
-      ),
-    );
+    \HH\Asio\join(Level::genLogBaseEntry($response['id'], $code, strval($response['response'])));
   }
   // Wait until next iteration
   $bases_cycle = \HH\Asio\join(Configuration::gen('bases_cycle'));

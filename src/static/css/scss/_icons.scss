@@ -9,10 +9,6 @@
   vertical-align: middle;
 }
 
-.icon-text {
-  vertical-align: middle;
-}
-
 .has-icon {
   vertical-align: middle;
 }
@@ -36,9 +32,8 @@
 .icon--badge {
   fill: none;
   stroke: $teal-blue;
-  max-width: 80px;
-  max-height: 62px;
-  height: auto;
+  width: 80px;
+  height: 62px;
 }
 
 .icon--mini {
